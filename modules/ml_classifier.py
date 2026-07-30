@@ -5,11 +5,15 @@
 
 import numpy as np
 import pandas as pd
+import joblib
+import os
+from sklearn.metrics import accuracy_score
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import classification_report, confusion_matrix
+from typing import Dict, List, Tuple
 import matplotlib.pyplot as plt
 import seaborn as sns
 import warnings
@@ -93,7 +97,7 @@ class MLDiagnosticClassifier:
         df = pd.DataFrame(records).sample(frac=1, random_state=42)
         return df
 
-    def train(self, verbose: bool = True) -> Dict:
+    def train(self, verbose: bool = True) -> dict:
         """Train all models and select the best one"""
         df = self._generate_synthetic_data(2000)
         X  = df[self.SYMPTOM_FEATURES].values
@@ -158,13 +162,15 @@ class MLDiagnosticClassifier:
         top5     = sorted(prob_map.items(), key=lambda x: x[1], reverse=True)[:5]
 
         return {
-            'diagnosis':      disease,
-            'confidence':     round(float(pred_proba[pred_encoded]), 4),
-            'top5':           top5,
-            'model_used':     self.best_model_name,
+            'diagnosis': disease,
+            'confidence': round(float(pred_proba[pred_encoded]), 4),
+            'confidence_level': self.confidence_level(
+                float(pred_proba[pred_encoded])
+            ),
+            'top5': top5,
+            'model_used': self.best_model_name,
             'symptom_vector': features[0].tolist()
         }
-
     def analyze(self, percept) -> Dict:
         """Module interface for the agent"""
         result = self.predict(percept.symptoms)
@@ -213,3 +219,91 @@ class MLDiagnosticClassifier:
         plt.savefig("ml_evaluation.png", dpi=150, bbox_inches='tight')
         plt.show()
         print("✅ Saved: ml_evaluation.png")
+    
+    def save_model(self, filename="models/ml_classifier.pkl"):
+        """Save the trained model."""
+        import os
+        import joblib
+
+        if not self.is_trained:
+            raise ValueError("Train the model before saving.")
+
+        os.makedirs("models", exist_ok=True)
+
+        joblib.dump({
+            "model": self.best_model,
+            "label_encoder": self.label_encoder,
+            "model_name": self.best_model_name
+        }, filename)
+
+        print(f"✅ Model saved to {filename}")
+
+    def load_model(self, filename="models/ml_classifier.pkl"):
+        """Load a trained model."""
+        import os
+        import joblib
+
+        if not os.path.exists(filename):
+            raise FileNotFoundError(filename)
+
+        data = joblib.load(filename)
+
+        self.best_model = data["model"]
+        self.label_encoder = data["label_encoder"]
+        self.best_model_name = data["model_name"]
+        self.is_trained = True
+
+        print(f"✅ Loaded {self.best_model_name}")
+
+    def evaluate(self):
+        """Print evaluation metrics."""
+        from sklearn.metrics import accuracy_score, classification_report
+
+        if not self.is_trained:
+            self.train(verbose=False)
+
+        predictions = self.best_model.predict(self._X_test)
+
+        print("\nClassification Report")
+        print(classification_report(
+            self._y_test,
+            predictions,
+            target_names=self.label_encoder.classes_
+        ))
+
+        print("Accuracy:", accuracy_score(self._y_test, predictions))
+
+    def predict_batch(self, patients):
+        """Predict multiple patients."""
+        return [self.predict(symptoms) for symptoms in patients]
+
+    def confidence_level(self, confidence):
+        """Convert confidence score to text."""
+        if confidence >= 0.90:
+            return "Very High"
+        elif confidence >= 0.75:
+            return "High"
+        elif confidence >= 0.50:
+            return "Moderate"
+        else:
+            return "Low"
+
+if __name__ == "__main__":
+
+    classifier = MLDiagnosticClassifier()
+
+    classifier.train()
+
+    patient = [
+        "fever",
+        "cough",
+        "fatigue",
+        "body_aches"
+    ]
+
+    result = classifier.predict(patient)
+
+    print("\nPrediction")
+    print(result)
+
+    classifier.plot_evaluation()
