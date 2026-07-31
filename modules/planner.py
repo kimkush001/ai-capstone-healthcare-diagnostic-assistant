@@ -183,9 +183,18 @@ class TreatmentPlanner:
         if plan is None:
             return {'error': 'No plan found', 'plan': []}
 
+        explanation = (
+    f"The treatment plan was generated for a patient diagnosed with "
+    f"{diagnosis.replace('_', ' ').title()} "
+    f"with {urgency.lower()} urgency. "
+    f"The planner used STRIPS actions and Breadth-First Search (BFS) "
+    f"to determine the sequence of treatment steps."
+)
+
         return {
             'diagnosis':     diagnosis,
             'urgency':       urgency,
+            'explanation': explanation,
             'initial_state': sorted(initial_state),
             'goal_state':    sorted(goal_state),
             'steps':         len(plan),
