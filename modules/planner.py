@@ -51,6 +51,13 @@ class TreatmentPlanner:
                 'cost': 0, 'duration': '2 hours'
             },
             {
+                'name': 'ConfirmDiagnosisFromLabs',
+                'precond': {'DIAGNOSIS_REFINED'},
+                'delete':  set(),
+                'add':     {'DIAGNOSIS_CONFIRMED'},
+                'cost': 0, 'duration': '1 hour'
+            },
+            {
                 'name': 'OrderPCRTest',
                 'precond': {'COVID_SUSPECTED', 'PATIENT_PRESENT'},
                 'delete':  {'COVID_SUSPECTED'},
@@ -207,8 +214,14 @@ class TreatmentPlanner:
 
     def analyze(self, percept) -> Dict:
         """Module interface — generates a sample plan"""
-        # This is called post-diagnosis; use KB result
         result = self.create_treatment_plan('flu', 'MEDIUM')
+
+        if 'error' in result:
+            result['summary']    = f"Plan: {result['error']}"
+            result['diagnosis']  = 'flu'
+            result['confidence'] = 0.0
+            return result
+
         result['summary']    = f"Plan: {result['steps']} steps generated"
         result['diagnosis']  = 'flu'
         result['confidence'] = 0.7
