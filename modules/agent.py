@@ -142,15 +142,15 @@ class HealthcareDiagnosticAgent:
         return "LOW"
 
     def _aggregate_diagnosis(self, results):
-        diagnoses = [
-            v.get('diagnosis', 'Unknown')
-            for v in results.values()
-            if isinstance(v, dict) and 'diagnosis' in v
-        ]
-        if not diagnoses:
+        scores = {}
+        for v in results.values():
+            if isinstance(v, dict) and 'diagnosis' in v:
+                dx = v['diagnosis']
+                conf = v.get('confidence', 0.5)
+                scores[dx] = scores.get(dx, 0) + conf
+        if not scores:
             return "Insufficient data"
-        from collections import Counter
-        return Counter(diagnoses).most_common(1)[0][0]
+        return max(scores, key=scores.get)
 
     def _generate_recommendations(self, urgency, results):
         base = {
