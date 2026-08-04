@@ -1,9 +1,19 @@
 # ============================================================
 # MODULE 6: Fuzzy Logic — Patient Severity Assessment
 # Covers: Week 12 (Fuzzy Logic)
+#
+# NOTE: This module is implemented from scratch (membership
+# functions, min/max rule evaluation, centroid defuzzification)
+# rather than using the scikit-fuzzy library. This was an
+# intentional choice to demonstrate the underlying fuzzy
+# inference mechanics directly rather than delegate them to a
+# library, since the goal of this module is to show
+# understanding of the technique itself. See requirements.txt —
+# scikit-fuzzy is not a dependency of this project.
 # ============================================================
 
 import numpy as np
+from typing import Dict
 
 class FuzzySeverityAssessor:
     """
