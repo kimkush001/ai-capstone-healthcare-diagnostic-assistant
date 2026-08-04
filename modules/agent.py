@@ -98,11 +98,15 @@ class HealthcareDiagnosticAgent:
         self.state = AgentState.PLANNING
         patient = self.memory.current_patient
 
-        # Aggregate confidence from multiple modules
+        # Aggregate confidence from multiple modules.
+        # 'Fuzzy' is excluded — it reports severity confidence, not
+        # diagnostic confidence, so mixing it in here would combine
+        # two different quantities. Its severity output still feeds
+        # urgency assessment separately via patient vitals.
         confidences = [
             v.get('confidence', 0)
-            for v in diagnosis_results.values()
-            if isinstance(v, dict) and 'confidence' in v
+            for k, v in diagnosis_results.items()
+            if k != 'Fuzzy' and isinstance(v, dict) and 'confidence' in v
         ]
         avg_confidence = sum(confidences)/len(confidences) if confidences else 0.5
 
@@ -142,8 +146,13 @@ class HealthcareDiagnosticAgent:
         return "LOW"
 
     def _aggregate_diagnosis(self, results):
+        # 'Fuzzy' is excluded — its 'diagnosis' field is actually a
+        # severity label (e.g. "HIGH", "CRITICAL"), not a disease name,
+        # so it should never compete as a candidate in the disease vote.
         scores = {}
-        for v in results.values():
+        for k, v in results.items():
+            if k == 'Fuzzy':
+                continue
             if isinstance(v, dict) and 'diagnosis' in v:
                 dx = v['diagnosis']
                 conf = v.get('confidence', 0.5)

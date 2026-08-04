@@ -145,9 +145,14 @@ class MedicalKnowledgeBase:
                      if 'suspected' in k or 'confirmed' in k}
 
         top = max(diseases, key=diseases.get) if diseases else "Unknown"
+        # Strip the _suspected/_confirmed suffix so this diagnosis
+        # label matches the plain disease names (e.g. "flu", not
+        # "flu_suspected") used by the other modules, allowing votes
+        # for the same disease to combine correctly during aggregation.
+        clean_diagnosis = top.replace('_confirmed', '').replace('_suspected', '')
         return {
             'summary':    f"Inferred {len(inferred)} conclusions",
-            'diagnosis':  top,
+            'diagnosis':  clean_diagnosis,
             'confidence': diseases.get(top, 0.5),
             'all_inferred': inferred
         }
