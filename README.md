@@ -15,7 +15,7 @@ Given a patient's symptoms, vitals, and history, the agent runs six coordinated 
 | Fuzzy | Fuzzy logic controller | Severity scoring from vitals and symptom counts |
 | Planner | Classical STRIPS-style planner | Generates a treatment action sequence from the diagnosis |
 
-The agent aggregates each module's diagnosis and confidence score, weighting by confidence, then hands the result to the Planner to produce a concrete treatment plan and urgency-based recommendations.
+The agent aggregates each module's diagnosis and confidence score, weighting by confidence, then hands the result to the Planner to produce a concrete treatment plan and urgency-based recommendations. Where the Knowledge Base module's forward-chaining rules contributed to the winning diagnosis, the agent surfaces the specific rule chain behind it (e.g. `'flu_confirmed' derived from: flu_suspected + high_fever (CF=0.85)`).
 
 ## Team
 
@@ -69,13 +69,25 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 pip install -r requirements.txt
 ```
 
-## Running the Demo
+> If you plan to run the interactive Streamlit demo (below) and `streamlit` isn't already listed in `requirements.txt`, install it separately: `pip install streamlit`.
+
+## Running the Demo (CLI)
 
 ```bash
 python app.py
 ```
 
-This builds the agent, registers all six modules, and runs three sample patients end-to-end — printing each patient's diagnosis, confidence, urgency, recommendations, and the full action log showing every module's individual output.
+This builds the agent, registers all six modules, and runs three sample patients end-to-end — printing each patient's diagnosis, confidence, urgency, KB explanation trace (where available), recommendations, and the full action log showing every module's individual output.
+
+## Running the Interactive Demo (Streamlit)
+
+For live presentations or exploring the agent with custom patients, `streamlit_app.py` provides a browser-based UI: pick symptoms via checkboxes, set vitals with sliders, and run the diagnostic agent against them directly — no need to edit `sample_patients()` in code.
+
+```bash
+streamlit run streamlit_app.py
+```
+
+Opens a local browser tab (typically `http://localhost:8501`). The first run trains the ML and Neural Network models, which takes a few seconds; results are cached for the rest of the session so later runs are instant. This file is standalone — it wires the same six modules `app.py` does, but doesn't import `app.py` itself.
 
 ## Running Tests
 
@@ -89,7 +101,8 @@ Runs unit tests covering the Knowledge Base, Bayesian Network, Fuzzy Controller,
 
 ```
 ai-capstone-healthcare-diagnostic-assistant/
-├── app.py                     # Entry point — builds system, runs demo patients
+├── app.py                     # CLI entry point — builds system, runs demo patients
+├── streamlit_app.py           # Interactive browser demo (live symptom input)
 ├── modules/
 │   ├── knowledge_base.py      # Rule-based forward-chaining inference
 │   ├── bayesian_net.py        # pgmpy Bayesian network
@@ -97,7 +110,7 @@ ai-capstone-healthcare-diagnostic-assistant/
 │   ├── neural_network.py      # Deep neural network (TensorFlow/Keras)
 │   ├── fuzzy_controller.py    # Fuzzy severity scoring
 │   ├── planner.py             # STRIPS-style treatment planner
-│   └── agent.py               # Agent orchestration and diagnosis aggregation
+│   └── agent.py                # Agent orchestration and diagnosis aggregation
 ├── tests/
 │   └── test_modules.py        # Unit tests
 └── requirements.txt
