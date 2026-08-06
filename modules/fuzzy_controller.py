@@ -4,6 +4,7 @@
 # ============================================================
 
 import numpy as np
+from typing import Dict
 
 class FuzzySeverityAssessor:
     """
@@ -115,6 +116,16 @@ class FuzzySeverityAssessor:
         )
         result['summary']   = (f"Severity: {result['severity_label']} "
                                f"({result['severity_score']:.1f}/100)")
+
+         # NEW: Explain why this severity was assigned
+        result['explanation'] = (
+        f"Temperature {percept.temperature}°C, "
+        f"heart rate {percept.heart_rate} bpm, "
+        f"and {len(percept.symptoms)} symptoms "
+        f"produced a severity score of "
+        f"{result['severity_score']}."
+    )
+
         result['diagnosis'] = result['severity_label']
         result['confidence']= result['severity_score'] / 100
         return result
