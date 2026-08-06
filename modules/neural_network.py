@@ -5,6 +5,7 @@
 
 import numpy as np
 import tensorflow as tf
+from typing import Dict,List
 from tensorflow.keras import layers, models, callbacks
 import matplotlib.pyplot as plt
 
