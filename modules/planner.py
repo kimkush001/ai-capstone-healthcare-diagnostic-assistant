@@ -216,9 +216,17 @@ class TreatmentPlanner:
 
     def analyze(self, percept) -> Dict:
         """Module interface — generates a sample plan"""
-        # This is called post-diagnosis; use KB result
+
         result = self.create_treatment_plan('flu', 'MEDIUM')
-        result['summary']    = f"Plan: {result['steps']} steps generated"
-        result['diagnosis']  = 'flu'
+
+        if 'error' in result:
+           result['summary'] = "No treatment plan could be generated"
+           result['diagnosis'] = 'flu'
+           result['confidence'] = 0.0
+           return result
+
+        result['summary'] = f"Plan: {result['steps']} steps generated"
+        result['diagnosis'] = 'flu'
         result['confidence'] = 0.7
+
         return result
